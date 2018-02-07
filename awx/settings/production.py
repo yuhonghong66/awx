@@ -59,6 +59,7 @@ LOGGING['handlers']['fact_receiver']['filename'] = '/var/log/tower/fact_receiver
 LOGGING['handlers']['management_playbooks']['filename'] = '/var/log/tower/management_playbooks.log'
 LOGGING['handlers']['system_tracking_migrations']['filename'] = '/var/log/tower/tower_system_tracking_migrations.log'
 LOGGING['handlers']['rbac_migrations']['filename'] = '/var/log/tower/tower_rbac_migrations.log'
+LOGGING['handlers']['memory_tracking']['filename'] = '/var/log/tower/memory_tracking.log'
 
 # Supervisor service name dictionary used for programatic restart
 SERVICE_NAME_DICT = {
