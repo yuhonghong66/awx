@@ -486,7 +486,12 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'awx.main.tasks.awx_isolated_heartbeat',
         'schedule': timedelta(seconds=AWX_ISOLATED_PERIODIC_CHECK),
         'options': {'expires': AWX_ISOLATED_PERIODIC_CHECK * 2},
-    }
+    },
+    'memory_tracking': {
+        'task': 'awx.main.tasks.memory_tracking',
+        'schedule': timedelta(seconds=120),
+        'options': {'expires': 110},
+    },
 }
 AWX_INCONSISTENT_TASK_INTERVAL = 60 * 3
 
@@ -1042,6 +1047,15 @@ LOGGING = {
             'backupCount': 5,
             'formatter':'simple',
         },
+        'memory_tracking': {
+            'level': 'INFO',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filters': ['require_debug_false'],
+            'filename': os.path.join(LOG_ROOT, 'memory_tracking.log'),
+            'maxBytes': 1024 * 1024 * 20, # 20 MB
+            'backupCount': 5,
+            'formatter':'simple',
+        },
         'management_playbooks': {
             'level': 'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
@@ -1122,6 +1136,10 @@ LOGGING = {
         },
         'awx.main.tasks': {
             'handlers': ['task_system'],
+            'propagate': False
+        },
+        'awx.main.tasks.memory_tracking': {
+            'handlers': ['memory_tracking'],
             'propagate': False
         },
         'awx.main.scheduler': {

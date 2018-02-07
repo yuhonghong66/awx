@@ -17,6 +17,7 @@ import time
 import traceback
 import urlparse
 from distutils.version import LooseVersion as Version
+from datetime import datetime
 import yaml
 import fcntl
 try:
@@ -417,6 +418,54 @@ def awx_periodic_scheduler(self):
             new_unified_job.websocket_emit_status("failed")
         emit_channel_notification('schedules-changed', dict(id=schedule.id, group_name="schedules"))
     state.save()
+
+
+@shared_task(bind=True, queue='tower', base=LogErrorsTask)
+def memory_tracking(self):
+    logger = logging.getLogger('awx.main.tasks.memory_tracking')
+    TRACKING_LIST = ['python', 'celery', 'callback', 'uwsgi', 'daphne', 'runworker']
+
+    if psutil is not None:
+        process_details = []
+        system_rss = 0.0
+        system_vms = 0.0
+
+        for process in psutil.process_iter():
+            cmd = ' '.join(process.cmdline())
+            if not any(prog in cmd for prog in TRACKING_LIST):
+                continue
+
+            memory = process.memory_info()
+
+            total_rss = memory.rss / 1024. ** 2
+            total_vms = memory.vms / 1024. ** 2
+
+            process_detail = {'cmd': cmd, 'pid': process.pid}
+            process_detail['children'] = []
+
+            children = process.children()
+            for child in children:
+                m = child.memory_info()
+                crss = m.rss / 1024. ** 2
+                cvms = m.vms / 1024. ** 2
+
+                total_rss += crss
+                total_vms += cvms
+
+                #child_detail = {'real': crss, 'virtual': cvms, 'pid': child.pid, 'cmd': ' '.join(child.cmdline())}
+                #process_detail['children'].append(child_detail)
+
+            process_detail['real'] = total_rss
+            process_detail['virtual'] = total_vms
+
+            system_rss += total_rss
+            system_vms += total_vms
+
+            process_details.append(process_detail)
+
+        logger.info({'processes': process_details,
+                     'system': {'real': system_rss, 'virtual': system_vms},
+                     'timestamp': datetime.utcnow()})
 
 
 def _send_notification_templates(instance, status_str):
