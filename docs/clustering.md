@@ -209,10 +209,12 @@ API settings values:
 ### Provisioning and Deprovisioning Instances and Groups
 
 * Provisioning
+
 Provisioning Instances after installation is supported by updating the `inventory` file and re-running the setup playbook. It's important that this file
 contain all passwords and information used when installing the cluster or other instances may be reconfigured (This could be intentional)
 
 * Deprovisioning
+
 Tower does not automatically de-provision instances since we can't distinguish between an instance that was taken offline intentionally or due to failure.
 Instead the procedure for deprovisioning an instance is to shut it down (or stop the `ansible-tower-service`) and run the Tower deprovision command:
 
@@ -221,6 +223,7 @@ $ awx-manage deprovision_instance --hostname=<hostname>
 ```
 
 * Removing/Deprovisioning Instance Groups
+
 Tower does not automatically de-provision or remove instance groups, even though re-provisioning will often cause these to be unused. They may still
 show up in api endpoints and stats monitoring. These groups can be removed with the following command:
 
